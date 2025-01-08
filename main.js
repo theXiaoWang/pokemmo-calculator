@@ -7,7 +7,7 @@ function createWindow() {
   var win = new BrowserWindow({
     width: 1200,
     height: 900,
-    title: "Pokemon Damage Calculator",
+    title: "PokeMMO Damage Calculator",
     icon: path.join(__dirname, 'dist/img/favicon.png')
   });
 
