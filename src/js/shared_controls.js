@@ -83,11 +83,42 @@ for (var bounded in bounds) {
 }
 function attachValidation(clazz, min, max) {
 	$("." + clazz).keyup(function () {
-		validate($(this), min, max);
+		// For EVs, we need special handling
+		if (clazz === "evs") {
+			validateEVs($(this), min, max);
+		} else {
+			validate($(this), min, max);
+		}
 	});
 }
 function validate(obj, min, max) {
 	obj.val(Math.max(min, Math.min(max, ~~obj.val())));
+}
+
+// Add new function to validate EVs
+function validateEVs(evInput, min, max) {
+	var currentVal = parseInt(evInput.val()) || 0;
+	var pokeInfo = evInput.closest('.poke-info');
+	var totalEvs = 0;
+
+	// Sum up all EVs except the current input
+	pokeInfo.find('.evs').not(evInput).each(function() {
+		totalEvs += parseInt($(this).val()) || 0;
+	});
+
+	// Calculate how many EVs we can still add
+	var remainingEvs = 510 - totalEvs;
+
+	// Clamp the current value between min and the smaller of max or remainingEvs
+	var newVal = Math.max(min, Math.min(max, Math.min(remainingEvs, currentVal)));
+
+	// Update the input value if it changed
+	if (currentVal !== newVal) {
+		evInput.val(newVal);
+	}
+
+	// Update total EVs display
+	totalEVs(pokeInfo);
 }
 
 $("input:radio[name='format']").change(function () {
@@ -674,7 +705,7 @@ $(".set-selector").change(function () {
 			if (regSets) {
 				pokeObj.find(".teraType").val(set.teraType || getForcedTeraType(pokemonName) || pokemon.types[0]);
 			}
-			pokeObj.find(".level").val(set.level === undefined ? 100 : set.level);
+			pokeObj.find(".level").val(set.level === undefined ? 50 : set.level);
 			for (i = 0; i < LEGACY_STATS[gen].length; i++) {
 				var stat = $("#randoms").prop("checked") ? legacyStatToStat(LEGACY_STATS[gen][i]) : LEGACY_STATS[gen][i];
 				pokeObj.find("." + LEGACY_STATS[gen][i] + " .evs").val(
@@ -1261,6 +1292,7 @@ function calcHP(poke) {
 	$currentHP.attr('data-set', true);
 }
 
+// Update the totalEVs function to show remaining EVs
 function totalEVs(poke) {
 	var totalEVs = 0;
 	for (var i = 0; i < LEGACY_STATS[gen].length; i++) {
@@ -1269,7 +1301,18 @@ function totalEVs(poke) {
 		var evs = ~~stat.find(".evs").val();
 		totalEVs += evs;
 	}
-	poke.find(".totalevs").find(".evs").text(totalEVs);
+
+	// Update the display on one line
+	var remaining = 510 - totalEVs;
+	poke.find(".totalevs").find(".evs").text(totalEVs + "/510(" + remaining + ")");
+
+	// Add visual feedback
+	if (totalEVs > 510) {
+		poke.find(".totalevs").find(".evs").css('color', 'red');
+	} else {
+		poke.find(".totalevs").find(".evs").css('color', '');
+	}
+
 	return totalEVs;
 }
 
