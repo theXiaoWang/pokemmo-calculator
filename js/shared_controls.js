@@ -136,6 +136,7 @@ $("input:radio[name='format']").change(function () {
 });
 
 var defaultLevel = 100;
+
 $("input:radio[name='defaultLevel']").change(function () {
 	defaultLevel = $("input:radio[name='defaultLevel']:checked").val();
 	$("#levelL1").val(defaultLevel);
@@ -1812,6 +1813,8 @@ $(document).ready(function () {
 	$("#singles-format").change();
 	$("#default-level-100").prop("checked", true);
 	$("#default-level-100").change();
+	$("#default-level-50").prop("checked", true);
+	$("#default-level-50").change();
 	loadDefaultLists();
 	$(".move-selector").select2({
 		dropdownAutoWidth: true,
