@@ -1886,6 +1886,10 @@ $(document).ready(function () {
 		var $panel, $search, $list, $close;
 		var $activeSelect = null;
 		var activeOptions = [];
+		var repositionRaf = null;
+		var overlayOpen = false;
+		var ignoreBackdropCloseUntil = 0;
+		var lastTouchAt = 0;
 
 		function ensureOverlay() {
 			if ($overlay.length) return;
@@ -1904,9 +1908,20 @@ $(document).ready(function () {
 			$search = $overlay.find(".ss-search");
 			$list = $overlay.find(".ss-options");
 
-			$overlay.on("mousedown touchstart", function (e) {
-				if (e.target === $overlay.get(0)) closeOverlay();
-			});
+			function maybeCloseFromBackdrop(e) {
+				if (e.target !== $overlay.get(0)) return;
+				if (Date.now() < ignoreBackdropCloseUntil) {
+					e.preventDefault();
+					e.stopPropagation();
+					return;
+				}
+				closeOverlay();
+			}
+			// iOS Safari can fire synthetic mouse/click events after touch; ignore briefly after opening
+			$overlay.on("touchstart", maybeCloseFromBackdrop);
+			$overlay.on("mousedown", maybeCloseFromBackdrop);
+			$overlay.on("click", maybeCloseFromBackdrop);
+
 			$search.on("input keyup", function () {
 				renderOptions($(this).val() || "");
 			});
@@ -1923,22 +1938,54 @@ $(document).ready(function () {
 			});
 		}
 
+		function getViewport() {
+			var vv = window.visualViewport;
+			if (vv) {
+				return {
+					left: vv.offsetLeft || 0,
+					top: vv.offsetTop || 0,
+					width: vv.width || window.innerWidth,
+					height: vv.height || window.innerHeight
+				};
+			}
+			return {left: 0, top: 0, width: window.innerWidth, height: window.innerHeight};
+		}
+
 		function positionPanelToSelect($sel) {
 			var el = $sel.get(0);
 			if (!el || !el.getBoundingClientRect) return;
 			var rect = el.getBoundingClientRect();
-			var left = Math.max(6, Math.min(rect.left, window.innerWidth - rect.width - 6));
-			var topBelow = rect.bottom + 2;
-			var maxHeightBelow = Math.max(160, window.innerHeight - topBelow - 10);
-			var useAbove = maxHeightBelow < 220;
-			var top = useAbove ? Math.max(10, rect.top - 260) : topBelow;
-			var maxHeight = useAbove ? Math.max(160, rect.top - 20) : maxHeightBelow;
+			var vp = getViewport();
+
+			// Keep panel visually anchored under the triggering <select>, but clamp into the visual viewport.
+			var width = Math.min(rect.width, Math.max(160, vp.width - 12));
+			var left = vp.left + rect.left;
+			left = Math.max(vp.left + 6, Math.min(left, vp.left + vp.width - width - 6));
+
+			var desiredTop = vp.top + rect.bottom + 2;
+			var maxHeight = Math.min(420, vp.height - rect.bottom - 10);
+			// If there's not enough space below (zoom/keyboard), shrink and/or shift upward so it stays in view.
+			if (maxHeight < 80) maxHeight = 80;
+			var top = desiredTop;
+			var maxTop = vp.top + vp.height - 10 - maxHeight;
+			top = Math.min(top, maxTop);
+			top = Math.max(vp.top + 6, top);
+
 			$panel.css({
 				position: "fixed",
 				left: left + "px",
 				top: top + "px",
-				width: rect.width + "px",
-				maxHeight: Math.min(420, maxHeight) + "px"
+				width: width + "px",
+				maxHeight: maxHeight + "px"
+			});
+		}
+
+		function requestReposition() {
+			if (!overlayOpen || !$activeSelect) return;
+			if (repositionRaf) return;
+			repositionRaf = window.requestAnimationFrame(function () {
+				repositionRaf = null;
+				positionPanelToSelect($activeSelect);
 			});
 		}
 
@@ -1990,6 +2037,15 @@ $(document).ready(function () {
 			renderOptions("");
 			positionPanelToSelect($sel);
 			$overlay.removeClass("hide");
+			overlayOpen = true;
+			ignoreBackdropCloseUntil = Date.now() + 500;
+
+			$(window).on("scroll.ssOverlay resize.ssOverlay orientationchange.ssOverlay", requestReposition);
+			if (window.visualViewport) {
+				window.visualViewport.addEventListener("scroll", requestReposition);
+				window.visualViewport.addEventListener("resize", requestReposition);
+			}
+
 			setTimeout(function () {
 				$search.focus();
 			}, 0);
@@ -1999,13 +2055,47 @@ $(document).ready(function () {
 			$overlay.addClass("hide");
 			$activeSelect = null;
 			activeOptions = [];
+			overlayOpen = false;
+			$(window).off(".ssOverlay");
+			if (window.visualViewport) {
+				window.visualViewport.removeEventListener("scroll", requestReposition);
+				window.visualViewport.removeEventListener("resize", requestReposition);
+			}
 		}
+
+		function openFromEvent(e) {
+			if ($(this).prop("disabled")) return;
+			if (e && e.type === "mousedown" && Date.now() - lastTouchAt < 800) return;
+			// prevent native OS dropdown; use overlay instead
+			e.preventDefault();
+			e.stopPropagation();
+			if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+			var $sel = $(this);
+			// Defer opening until the current touch/click has completed to avoid iOS "flash then close"
+			setTimeout(function () {
+				openOverlay($sel);
+			}, 0);
+		}
+
+		// Use touchend on mobile (more stable than touchstart for overlays)
+		$(document).on("touchend", SEARCH_SELECTORS, function (e) {
+			lastTouchAt = Date.now();
+			openFromEvent.call(this, e);
+		});
+		// Desktop/mouse fallback (avoid duplicate synthetic mouse events after touch on iOS)
+		$(document).on("mousedown", SEARCH_SELECTORS, openFromEvent);
+		$(document).on("click", SEARCH_SELECTORS, function (e) {
+			// Always block native click behavior.
+			e.preventDefault();
+			e.stopPropagation();
+			if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+		});
 
 		$(document).on("mousedown touchstart", SEARCH_SELECTORS, function (e) {
 			if ($(this).prop("disabled")) return;
-			// prevent native OS dropdown; use overlay instead
+			// prevent native OS dropdown; we open on touchend/mousedown
 			e.preventDefault();
-			openOverlay($(this));
+			e.stopPropagation();
 		});
 		$(document).on("keydown", SEARCH_SELECTORS, function (e) {
 			// Enter / Space opens overlay for keyboard users
