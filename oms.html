@@ -6,7 +6,7 @@
     <title>Pok&eacute;mon Damage Calculator</title>
 	 <link rel="icon" type="image/x-icon" href="./img/favicon.png">
     <link type="text/css" rel="stylesheet" href="./js/vendor/select2/select2.css" />
-    <link type="text/css" rel="stylesheet" href="./css/main.css?dbc176a0" />
+    <link type="text/css" rel="stylesheet" href="./css/main.css?cf89ec92" />
     <link type="text/css" rel="stylesheet" href="./css/vendor/bootstrap.css" />
     <link type="text/css" rel="stylesheet" href="./css/dark-theme.css" id="dark-theme-styles">
     <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -201,7 +201,7 @@
                                 <input class="base calc-trigger" value="100" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
-                                <input class="ivs calc-trigger" value="31" />
+                                <input class="ivs calc-trigger" type="number" min="0" max="31" step="1" value="31" inputmode="decimal" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
                                 <input class="evs calc-trigger" type="number" min="0" max="252" step="4" value="0" />
@@ -221,7 +221,7 @@
                                 <input class="base calc-trigger" value="100" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
-                                <input class="ivs calc-trigger" value="31" />
+                                <input class="ivs calc-trigger" type="number" min="0" max="31" step="1" value="31" inputmode="decimal" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
                                 <input class="evs calc-trigger" type="number" min="0" max="252" step="4" value="0" />
@@ -257,7 +257,7 @@
                                 <input class="base calc-trigger" value="100" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
-                                <input class="ivs calc-trigger" value="31" />
+                                <input class="ivs calc-trigger" type="number" min="0" max="31" step="1" value="31" inputmode="decimal" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
                                 <input class="evs calc-trigger" type="number" min="0" max="252" step="4" value="0" />
@@ -293,7 +293,7 @@
                                 <input class="base calc-trigger" value="100" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
-                                <input class="ivs calc-trigger" value="31" />
+                                <input class="ivs calc-trigger" type="number" min="0" max="31" step="1" value="31" inputmode="decimal" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
                                 <input class="evs calc-trigger" type="number" min="0" max="252" step="4" value="0" />
@@ -329,7 +329,7 @@
                                 <input class="base calc-trigger" value="100" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
-                                <input class="ivs calc-trigger" value="31" />
+                                <input class="ivs calc-trigger" type="number" min="0" max="31" step="1" value="31" inputmode="decimal" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
                                 <input class="evs calc-trigger" type="number" min="0" max="252" step="4" value="0" />
@@ -395,7 +395,7 @@
                                 <input class="base calc-trigger" value="100" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
-                                <input class="ivs calc-trigger" value="31" />
+                                <input class="ivs calc-trigger" type="number" min="0" max="31" step="1" value="31" inputmode="decimal" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
                                 <input class="evs calc-trigger" type="number" min="0" max="252" step="4" value="0" />
@@ -544,7 +544,11 @@
                 title="Use the corresponding Max Move?">Dynamax</label>
                 <br />
                 <br />
-                Health <div class="hpbar"></div>
+                Health
+                <div class="hpbar-wrap">
+                    <div class="hpbar"></div>
+                    <input class="hp-slider calc-trigger" type="range" min="0" max="100" step="1" value="100" aria-label="HP percentage" />
+                </div>
             </div>
             <div hidden id="criticalHitInstruction">Force this attack to be a critical hit?</div>
             <div hidden id="zMoveInstruction">Make this attack a Z-move?</div>
@@ -560,6 +564,8 @@
                 <label class="btn crit-btn" for="critL1" title="Force this attack to be a critical hit?">Crit</label>
                 <input aria-describedby="zMoveInstruction" class="move-z calc-trigger visually-hidden" type="checkbox" id="zL1"/>
                 <label class="btn z-btn gen-specific g7 g8 g9" for="zL1" title="Make this attack a Z-move?">Z</label>
+                <input class="pursuit-bp2x visually-hidden" type="checkbox" id="pursuit2xL1" />
+                <label class="btn pursuit-bp2x-btn hide" for="pursuit2xL1" title="Pursuit vs a switching target (2x BP)">2x</label>
                 <input aria-describedby="stellarBoostInstruction" class="move-stellar calc-trigger visually-hidden" type="checkbox" id="stellarL1" />
                 <label class="stellar-btn btn" style="display: none;" for="stellarL1" title="Make this attack Stellar boosted?">Stellar</label>
                 <select class="move-hits calc-trigger hide">
@@ -596,6 +602,8 @@
                 <label class="btn crit-btn" for="critL2" title="Force this attack to be a critical hit?">Crit</label>
                 <input aria-describedby="zMoveInstruction" class="move-z calc-trigger visually-hidden" type="checkbox" id="zL2"/>
                 <label class="btn z-btn gen-specific g7 g8 g9" for="zL2" title="Make this attack a Z-move?">Z</label>
+                <input class="pursuit-bp2x visually-hidden" type="checkbox" id="pursuit2xL2" />
+                <label class="btn pursuit-bp2x-btn hide" for="pursuit2xL2" title="Pursuit vs a switching target (2x BP)">2x</label>
                 <input aria-describedby="stellarBoostInstruction" class="move-stellar calc-trigger visually-hidden" type="checkbox" id="stellarL2" />
                 <label class="stellar-btn btn" style="display: none;" for="stellarL2" title="Make this attack Stellar boosted?">Stellar</label>
                 <select class="move-hits calc-trigger hide">
@@ -632,6 +640,8 @@
                 <label class="btn crit-btn" for="critL3" title="Force this attack to be a critical hit?">Crit</label>
                 <input aria-describedby="zMoveInstruction" class="move-z calc-trigger visually-hidden" type="checkbox" id="zL3"/>
                 <label class="btn z-btn gen-specific g7 g8 g9" for="zL3" title="Make this attack a Z-move?">Z</label>
+                <input class="pursuit-bp2x visually-hidden" type="checkbox" id="pursuit2xL3" />
+                <label class="btn pursuit-bp2x-btn hide" for="pursuit2xL3" title="Pursuit vs a switching target (2x BP)">2x</label>
                 <input aria-describedby="stellarBoostInstruction" class="move-stellar calc-trigger visually-hidden" type="checkbox" id="stellarL3" />
                 <label class="stellar-btn btn" style="display: none;" for="stellarL3" title="Make this attack Stellar boosted?">Stellar</label>
                 <select class="move-hits calc-trigger hide">
@@ -668,6 +678,8 @@
                 <label class="btn crit-btn" for="critL4" title="Force this attack to be a critical hit?">Crit</label>
                 <input aria-describedby="zMoveInstruction" class="move-z calc-trigger visually-hidden" type="checkbox" id="zL4"/>
                 <label class="btn z-btn gen-specific g7 g8 g9" for="zL4" title="Make this attack a Z-move?">Z</label>
+                <input class="pursuit-bp2x visually-hidden" type="checkbox" id="pursuit2xL4" />
+                <label class="btn pursuit-bp2x-btn hide" for="pursuit2xL4" title="Pursuit vs a switching target (2x BP)">2x</label>
                 <input aria-describedby="stellarBoostInstruction" class="move-stellar calc-trigger visually-hidden" type="checkbox" id="stellarL4" />
                 <label class="stellar-btn btn" style="display: none;" for="stellarL4" title="Make this attack Stellar boosted?">Stellar</label>
                 <select class="move-hits calc-trigger hide">
@@ -1122,7 +1134,7 @@
                                 <input class="base calc-trigger" value="100" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
-                                <input class="ivs calc-trigger" value="31" />
+                                <input class="ivs calc-trigger" type="number" min="0" max="31" step="1" value="31" inputmode="decimal" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
                                 <input class="evs calc-trigger" type="number" min="0" max="252" step="4" value="0" />
@@ -1142,7 +1154,7 @@
                                 <input class="base calc-trigger" value="100" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
-                                <input class="ivs calc-trigger" value="31" />
+                                <input class="ivs calc-trigger" type="number" min="0" max="31" step="1" value="31" inputmode="decimal" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
                                 <input class="evs calc-trigger" type="number" min="0" max="252" step="4" value="0" />
@@ -1178,7 +1190,7 @@
                                 <input class="base calc-trigger" value="100" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
-                                <input class="ivs calc-trigger" value="31" />
+                                <input class="ivs calc-trigger" type="number" min="0" max="31" step="1" value="31" inputmode="decimal" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
                                 <input class="evs calc-trigger" type="number" min="0" max="252" step="4" value="0" />
@@ -1214,7 +1226,7 @@
                                 <input class="base calc-trigger" value="100" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
-                                <input class="ivs calc-trigger" value="31" />
+                                <input class="ivs calc-trigger" type="number" min="0" max="31" step="1" value="31" inputmode="decimal" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
                                 <input class="evs calc-trigger" type="number" min="0" max="252" step="4" value="0" />
@@ -1250,7 +1262,7 @@
                                 <input class="base calc-trigger" value="100" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
-                                <input class="ivs calc-trigger" value="31" />
+                                <input class="ivs calc-trigger" type="number" min="0" max="31" step="1" value="31" inputmode="decimal" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
                                 <input class="evs calc-trigger" type="number" min="0" max="252" step="4" value="0" />
@@ -1316,7 +1328,7 @@
                                 <input class="base calc-trigger" value="100" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
-                                <input class="ivs calc-trigger" value="31" />
+                                <input class="ivs calc-trigger" type="number" min="0" max="31" step="1" value="31" inputmode="decimal" />
                             </td>
                             <td class="gen-specific g3 g4 g5 g6 g7 g8 g9">
                                 <input class="evs calc-trigger" type="number" min="0" max="252" step="4" value="0" />
@@ -1463,7 +1475,11 @@
                 title="Use the corresponding Max Move?">Dynamax</label>
                 <br />
                 <br />
-                Health <div class="hpbar"></div>
+                Health
+                <div class="hpbar-wrap">
+                    <div class="hpbar"></div>
+                    <input class="hp-slider calc-trigger" type="range" min="0" max="100" step="1" value="100" aria-label="HP percentage" />
+                </div>
             </div>
             <div class="move1">
                 <select class="move-selector calc-trigger small-select"></select>
@@ -1477,6 +1493,8 @@
                 <label class="btn crit-btn" for="critR1" title="Force this attack to be a critical hit?">Crit</label>
                 <input aria-describedby="zMoveInstruction" class="move-z calc-trigger visually-hidden" type="checkbox" id="zR1"/>
                 <label class="btn z-btn gen-specific g7 g8 g9" for="zR1" title="Make this attack a Z-move?">Z</label>
+                <input class="pursuit-bp2x visually-hidden" type="checkbox" id="pursuit2xR1" />
+                <label class="btn pursuit-bp2x-btn hide" for="pursuit2xR1" title="Pursuit vs a switching target (2x BP)">2x</label>
                 <input aria-describedby="stellarBoostInstruction" class="move-stellar calc-trigger visually-hidden" type="checkbox" id="stellarR1" />
                 <label class="stellar-btn btn" style="display: none;" for="stellarR1" title="Make this attack Stellar boosted?">Stellar</label>
                 <select class="move-hits calc-trigger hide">
@@ -1513,6 +1531,8 @@
                 <label class="btn crit-btn" for="critR2" title="Force this attack to be a critical hit?">Crit</label>
                 <input aria-describedby="zMoveInstruction" class="move-z calc-trigger visually-hidden" type="checkbox" id="zR2"/>
                 <label class="btn z-btn gen-specific g7 g8 g9" for="zR2" title="Make this attack a Z-move?">Z</label>
+                <input class="pursuit-bp2x visually-hidden" type="checkbox" id="pursuit2xR2" />
+                <label class="btn pursuit-bp2x-btn hide" for="pursuit2xR2" title="Pursuit vs a switching target (2x BP)">2x</label>
                 <input aria-describedby="stellarBoostInstruction" class="move-stellar calc-trigger visually-hidden" type="checkbox" id="stellarR2" />
                 <label class="stellar-btn btn" style="display: none;" for="stellarR2" title="Make this attack Stellar boosted?">Stellar</label>
                 <select class="move-hits calc-trigger hide">
@@ -1549,7 +1569,9 @@
                 <label class="btn crit-btn" for="critR3" title="Force this attack to be a critical hit?">Crit</label>
                 <input aria-describedby="zMoveInstruction" class="move-z calc-trigger visually-hidden" type="checkbox" id="zR3"/>
                 <label class="btn z-btn gen-specific g7 g8 g9" for="zR3" title="Make this attack a Z-move?">Z</label>
-               <input aria-describedby="stellarBoostInstruction" class="move-stellar calc-trigger visually-hidden" type="checkbox" id="stellarR3" />
+                <input class="pursuit-bp2x visually-hidden" type="checkbox" id="pursuit2xR3" />
+                <label class="btn pursuit-bp2x-btn hide" for="pursuit2xR3" title="Pursuit vs a switching target (2x BP)">2x</label>
+                <input aria-describedby="stellarBoostInstruction" class="move-stellar calc-trigger visually-hidden" type="checkbox" id="stellarR3" />
                 <label class="stellar-btn btn" style="display: none;" for="stellarR3" title="Make this attack Stellar boosted?">Stellar</label>
                 <select class="move-hits calc-trigger hide">
                     <option value="2">2 hits</option>
@@ -1585,6 +1607,8 @@
                 <label class="btn crit-btn" for="critR4" title="Force this attack to be a critical hit?">Crit</label>
                 <input aria-describedby="zMoveInstruction" class="move-z calc-trigger visually-hidden" type="checkbox" id="zR4"/>
                 <label class="btn z-btn gen-specific g7 g8 g9" for="zR4" title="Make this attack a Z-move?">Z</label>
+                <input class="pursuit-bp2x visually-hidden" type="checkbox" id="pursuit2xR4" />
+                <label class="btn pursuit-bp2x-btn hide" for="pursuit2xR4" title="Pursuit vs a switching target (2x BP)">2x</label>
                 <input aria-describedby="stellarBoostInstruction" class="move-stellar calc-trigger visually-hidden" type="checkbox" id="stellarR4" />
                 <label class="stellar-btn btn" style="display: none;" for="stellarR4" title="Make this attack Stellar boosted?">Stellar</label>
                 <select class="move-hits calc-trigger hide">
@@ -1657,7 +1681,7 @@
     <script type="text/javascript" src="./calc/result.js?d5c7552b"></script>
     <script type="text/javascript" src="./calc/adaptable.js?afeb3759"></script>
     <script type="text/javascript" src="./calc/index.js?2377cbc8"></script>
-    <script type="text/javascript" src="./js/shared_controls.js?cad8d7a2"></script>
+    <script type="text/javascript" src="./js/shared_controls.js?3a2af2e3"></script>
     <script type="text/javascript" src="./js/index_randoms_controls.js?41bba86b"></script>
     <script type="text/javascript" src="./js/moveset_import.js?241a62ea"></script>
     <script type="text/javascript" src="./js/oms_controls.js?46d292f5"> </script>
