@@ -599,6 +599,8 @@ table.field {
 	position: relative;
 	margin-top: 2px;
 	--hp-thumb-size: 12px;
+	--hp-track-height: 4px;
+	--hp-hit-height: 18px;
 }
 
 .hpbar-wrap .hpbar {
@@ -610,12 +612,13 @@ table.field {
 	left: calc(var(--hp-thumb-size) / -2);
 	top: 50%;
 	width: calc(100% + var(--hp-thumb-size));
-	height: 18px;
+	height: var(--hp-hit-height);
 	margin: 0;
 	background: transparent;
 	transform: translateY(-50%);
 	appearance: none;
 	-webkit-appearance: none;
+	touch-action: pan-y;
 }
 
 .hp-slider:focus {
@@ -623,7 +626,7 @@ table.field {
 }
 
 .hp-slider::-webkit-slider-runnable-track {
-	height: 4px;
+	height: var(--hp-track-height);
 	background: transparent;
 }
 
@@ -635,11 +638,12 @@ table.field {
 	border-radius: 50%;
 	background: #e6e6e6;
 	border: 1px solid rgba(0, 0, 0, 0.6);
-	margin-top: -4px;
+	margin-top: calc((var(--hp-thumb-size) - var(--hp-track-height)) / -2);
+	box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
 }
 
 .hp-slider::-moz-range-track {
-	height: 4px;
+	height: var(--hp-track-height);
 	background: transparent;
 }
 
@@ -649,6 +653,14 @@ table.field {
 	border-radius: 50%;
 	background: #e6e6e6;
 	border: 1px solid rgba(0, 0, 0, 0.6);
+	box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+}
+
+@media (pointer: coarse) {
+	.hpbar-wrap {
+		--hp-thumb-size: 18px;
+		--hp-hit-height: 30px;
+	}
 }
 
 .hpbar.hp-green {
