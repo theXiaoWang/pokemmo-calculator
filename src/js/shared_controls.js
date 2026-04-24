@@ -82,7 +82,7 @@ for (var bounded in bounds) {
 	attachValidation(bounded, bounds[bounded][0], bounds[bounded][1]);
 }
 function attachValidation(clazz, min, max) {
-	$("." + clazz).keyup(function () {
+	$("." + clazz).on("keyup change input", function () {
 		// For EVs, we need special handling
 		if (clazz === "evs") {
 			validateEVs($(this), min, max);
@@ -99,18 +99,9 @@ function validate(obj, min, max) {
 function validateEVs(evInput, min, max) {
 	var currentVal = parseInt(evInput.val()) || 0;
 	var pokeInfo = evInput.closest('.poke-info');
-	var totalEvs = 0;
 
-	// Sum up all EVs except the current input
-	pokeInfo.find('.evs').not(evInput).each(function() {
-		totalEvs += parseInt($(this).val()) || 0;
-	});
-
-	// Calculate how many EVs we can still add
-	var remainingEvs = 510 - totalEvs;
-
-	// Clamp the current value between min and the smaller of max or remainingEvs
-	var newVal = Math.max(min, Math.min(max, Math.min(remainingEvs, currentVal)));
+	// Clamp each EV independently; total EV cap is handled in the Total display.
+	var newVal = Math.max(min, Math.min(max, currentVal));
 
 	// Update the input value if it changed
 	if (currentVal !== newVal) {
@@ -242,6 +233,8 @@ function calcStats(poke) {
 function calcCurrentHP(poke, max, percent, skipDraw) {
 	var current = Math.round(Number(percent) * Number(max) / 100);
 	poke.find(".current-hp").val(current);
+	var sliderPercent = Math.max(0, Math.min(100, Math.round(Number(percent))));
+	poke.find(".hp-slider").val(sliderPercent);
 	if (!skipDraw) drawHealthBar(poke, max, current);
 	return current;
 }
@@ -254,21 +247,29 @@ function calcPercentHP(poke, max, current, skipDraw) {
 	}
 
 	poke.find(".percent-hp").val(percent);
+	poke.find(".hp-slider").val(percent);
 	if (!skipDraw) drawHealthBar(poke, max, current);
 	return percent;
 }
 function drawHealthBar(poke, max, current) {
-	var fillPercent = 100 * current / max;
+	var fillPercent = max ? (100 * current / max) : 0;
+	fillPercent = Math.max(0, Math.min(100, fillPercent));
 	var fillColor = fillPercent > 50 ? "green" : fillPercent > 20 ? "yellow" : "red";
 
 	var healthbar = poke.find(".hpbar");
+	var fill = healthbar.children(".hpbar-fill");
+	if (!fill.length) {
+		healthbar.empty().append('<div class="hpbar-fill"></div>');
+		fill = healthbar.children(".hpbar-fill");
+	}
 	healthbar.addClass("hp-" + fillColor);
 	var unwantedColors = ["green", "yellow", "red"];
 	unwantedColors.splice(unwantedColors.indexOf(fillColor), 1);
 	for (var i = 0; i < unwantedColors.length; i++) {
 		healthbar.removeClass("hp-" + unwantedColors[i]);
 	}
-	healthbar.css("background", "linear-gradient(to right, " + fillColor + " " + fillPercent + "%, white 0%");
+	healthbar.css("background", "");
+	fill.css("width", fillPercent + "%");
 }
 // TODO: these HP inputs should really be input type=number with min=0, step=1, constrained by max=maxHP or 100
 $(".current-hp").keyup(function () {
@@ -282,6 +283,16 @@ $(".percent-hp").keyup(function () {
 	validate($(this), 0, 100);
 	var percent = $(this).val();
 	calcCurrentHP($(this).parent(), max, percent);
+});
+
+$(".hp-slider").on("input change", function () {
+	var container = $(this).closest(".info-group");
+	if (!container.length) container = $(this).parent();
+	var max = container.find(".max-hp").text();
+	validate($(this), 0, 100);
+	var percent = $(this).val();
+	container.find(".percent-hp").val(percent);
+	calcCurrentHP(container, max, percent);
 });
 
 $(".ability").bind("keyup change", function () {
@@ -502,6 +513,26 @@ $(".teraType").change(function () {
 });
 
 var lockerMove = "";
+
+function updatePursuit2xButton(moveGroupObj, moveName) {
+	var checkbox = moveGroupObj.children(".pursuit-bp2x");
+	var label = moveGroupObj.children(".pursuit-bp2x-btn");
+	if (!checkbox.length || !label.length) return;
+
+	var isPursuit = moveName === "Pursuit";
+	if (!isPursuit) {
+		if (checkbox.prop("checked")) {
+			checkbox.prop("checked", false).trigger("change");
+		}
+		label.addClass("hide");
+		checkbox.removeData("basebp");
+		return;
+	}
+
+	label.removeClass("hide");
+	checkbox.data("basebp", Number(moveGroupObj.children(".move-bp").val()) || 0);
+}
+
 // auto-update move details on select
 $(".move-selector").change(function () {
 	var moveName = $(this).val();
@@ -548,6 +579,7 @@ $(".move-selector").change(function () {
 		}
 	}
 	$(this).attr('data-prev', moveName);
+	updatePursuit2xButton(moveGroupObj, moveName);
 	moveGroupObj.children(".move-type").val(move.type);
 	moveGroupObj.children(".move-cat").val(move.category);
 	moveGroupObj.children(".move-crit").prop("checked", move.willCrit === true);
@@ -588,6 +620,31 @@ $(".move-selector").change(function () {
 		moveGroupObj.children(".stat-drops").hide();
 	}
 	moveGroupObj.children(".move-z").prop("checked", false);
+});
+
+$(".pursuit-bp2x").on("change", function () {
+	var checkbox = $(this);
+	var moveGroupObj = checkbox.parent();
+	var bpInput = moveGroupObj.children(".move-bp");
+	var checked = checkbox.prop("checked");
+
+	if (checked) {
+		var basebp = Number(bpInput.val()) || 0;
+		checkbox.data("basebp", basebp);
+		bpInput.val(basebp * 2).trigger("change");
+	} else {
+		var restore = Number(checkbox.data("basebp")) || 0;
+		bpInput.val(restore).trigger("change");
+	}
+});
+
+$(".move-bp").on("input change", function () {
+	var moveGroupObj = $(this).parent();
+	var checkbox = moveGroupObj.children(".pursuit-bp2x");
+	var label = moveGroupObj.children(".pursuit-bp2x-btn");
+	if (!checkbox.length || !label.length || label.hasClass("hide")) return;
+	if (checkbox.prop("checked")) return;
+	checkbox.data("basebp", Number($(this).val()) || 0);
 });
 
 $(".item").change(function () {
@@ -881,7 +938,12 @@ function stellarButtonsVisibility(pokeObj, vis) {
 }
 
 function setSelectValueIfValid(select, value, fallback) {
-	select.val(!value ? fallback : select.children("option[value='" + value + "']").length ? value : fallback);
+	var newVal = !value ? fallback : select.children("option[value='" + value + "']").length ? value : fallback;
+	select.val(newVal);
+	// Keep Select2 in sync (without forcing a change event) if this <select> is Select2-enhanced.
+	if (select.data("select2")) {
+		select.select2("val", newVal);
+	}
 }
 
 $(".teraToggle").change(function () {
@@ -938,7 +1000,7 @@ $(".teraToggle").change(function () {
 $(".forme").change(function () {
 	var altForme = pokedex[$(this).val()],
 		container = $(this).closest(".info-group").siblings(),
-		fullSetName = container.find(".select2-chosen").first().text(),
+		fullSetName = container.find("input.set-selector").val() || container.find(".select2-chosen").first().text(),
 		pokemonName = fullSetName.substring(0, fullSetName.indexOf(" (")),
 		setName = fullSetName.substring(fullSetName.indexOf("(") + 1, fullSetName.lastIndexOf(")"));
 
@@ -1303,15 +1365,14 @@ function totalEVs(poke) {
 		totalEVs += evs;
 	}
 
-	// Update the display on one line
-	var remaining = 510 - totalEVs;
-	poke.find(".totalevs").find(".evs").text(totalEVs + "/510(" + remaining + ")");
-
-	// Add visual feedback
-	if (totalEVs > 510) {
-		poke.find(".totalevs").find(".evs").css('color', 'red');
+	var cap = 510;
+	var totalCell = poke.find(".totalevs").find(".evs");
+	if (totalEVs > cap) {
+		var overflow = totalEVs - cap;
+		totalCell.html(cap + "/" + totalEVs + "(<span class=\"ev-overflow\">" + overflow + "</span>)");
 	} else {
-		poke.find(".totalevs").find(".evs").css('color', '');
+		var remaining = cap - totalEVs;
+		totalCell.text(totalEVs + "/" + cap + "(" + remaining + ")");
 	}
 
 	return totalEVs;
@@ -1816,6 +1877,145 @@ $(document).ready(function () {
 	$("#default-level-50").prop("checked", true);
 	$("#default-level-50").change();
 	loadDefaultLists();
+
+	// Search overlay for Nature / Ability / Item (keeps native <select> values + calc events intact)
+	(function initSearchOverlay() {
+		var SEARCH_SELECTORS = "select.nature, select.ability, select.item";
+		var overlayId = "searchable-select-overlay";
+		var $overlay = $("#" + overlayId);
+		var $panel, $search, $list, $close;
+		var $activeSelect = null;
+		var activeOptions = [];
+
+		function ensureOverlay() {
+			if ($overlay.length) return;
+			$overlay = $(
+				'<div id="' + overlayId + '" class="hide ss-overlay">' +
+					'<div class="ss-panel" role="dialog" aria-modal="true">' +
+						'<div class="ss-search-row">' +
+							'<input type="text" class="ss-search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search...">' +
+						'</div>' +
+						'<div class="ss-options" role="listbox"></div>' +
+					'</div>' +
+				'</div>'
+			);
+			$("body").append($overlay);
+			$panel = $overlay.find(".ss-panel");
+			$search = $overlay.find(".ss-search");
+			$list = $overlay.find(".ss-options");
+
+			$overlay.on("mousedown touchstart", function (e) {
+				if (e.target === $overlay.get(0)) closeOverlay();
+			});
+			$search.on("input keyup", function () {
+				renderOptions($(this).val() || "");
+			});
+			$(document).on("keydown", function (e) {
+				if ($overlay.hasClass("hide")) return;
+				if (e.keyCode === 27) closeOverlay(); // ESC
+			});
+			$list.on("click", ".ss-option", function () {
+				if (!$activeSelect) return;
+				var value = $(this).attr("data-value");
+				$activeSelect.val(value);
+				$activeSelect.trigger("change").trigger("keyup");
+				closeOverlay();
+			});
+		}
+
+		function positionPanelToSelect($sel) {
+			var el = $sel.get(0);
+			if (!el || !el.getBoundingClientRect) return;
+			var rect = el.getBoundingClientRect();
+			var left = Math.max(6, Math.min(rect.left, window.innerWidth - rect.width - 6));
+			var topBelow = rect.bottom + 2;
+			var maxHeightBelow = Math.max(160, window.innerHeight - topBelow - 10);
+			var useAbove = maxHeightBelow < 220;
+			var top = useAbove ? Math.max(10, rect.top - 260) : topBelow;
+			var maxHeight = useAbove ? Math.max(160, rect.top - 20) : maxHeightBelow;
+			$panel.css({
+				position: "fixed",
+				left: left + "px",
+				top: top + "px",
+				width: rect.width + "px",
+				maxHeight: Math.min(420, maxHeight) + "px"
+			});
+		}
+
+		function buildOptions($sel) {
+			activeOptions = [];
+			$sel.find("option").each(function () {
+				activeOptions.push({
+					value: this.value,
+					text: $(this).text()
+				});
+			});
+		}
+
+		function matchesSearch(text, term) {
+			if (!term) return true;
+			var t = ("" + term).toUpperCase().trim().split(/\s+/);
+			var hay = ("" + text).toUpperCase();
+			for (var i = 0; i < t.length; i++) {
+				if (!t[i]) continue;
+				if (hay.indexOf(t[i]) === -1) return false;
+			}
+			return true;
+		}
+
+		function renderOptions(term) {
+			if (!$activeSelect) return;
+			var selected = $activeSelect.val();
+			var html = "";
+			for (var i = 0; i < activeOptions.length; i++) {
+				var opt = activeOptions[i];
+				if (!matchesSearch(opt.text, term)) continue;
+				var isSelected = opt.value === selected;
+				html += '<div class="ss-option' + (isSelected ? ' selected' : '') + '" role="option" data-value="' +
+					(opt.value + "").replace(/"/g, "&quot;") + '">' +
+					(opt.text + "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") +
+					"</div>";
+			}
+			$list.html(html || '<div class="ss-empty">No matches</div>');
+
+			var selEl = $list.find(".ss-option.selected").get(0);
+			if (selEl && selEl.scrollIntoView) selEl.scrollIntoView({block: "nearest"});
+		}
+
+		function openOverlay($sel) {
+			ensureOverlay();
+			$activeSelect = $sel;
+			buildOptions($sel);
+			$search.val("");
+			renderOptions("");
+			positionPanelToSelect($sel);
+			$overlay.removeClass("hide");
+			setTimeout(function () {
+				$search.focus();
+			}, 0);
+		}
+
+		function closeOverlay() {
+			$overlay.addClass("hide");
+			$activeSelect = null;
+			activeOptions = [];
+		}
+
+		$(document).on("mousedown touchstart", SEARCH_SELECTORS, function (e) {
+			if ($(this).prop("disabled")) return;
+			// prevent native OS dropdown; use overlay instead
+			e.preventDefault();
+			openOverlay($(this));
+		});
+		$(document).on("keydown", SEARCH_SELECTORS, function (e) {
+			// Enter / Space opens overlay for keyboard users
+			if (e.keyCode === 13 || e.keyCode === 32) {
+				e.preventDefault();
+				openOverlay($(this));
+			}
+		});
+	})();
+
 	$(".move-selector").select2({
 		dropdownAutoWidth: true,
 		matcher: function (term, text) {
